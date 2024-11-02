@@ -24,8 +24,14 @@ struct __attribute__((packed)) IPv4Flags {
 };
 
 struct __attribute__((packed)) IPv4Address {
-    int32_t                     address;
+    uint8_t                     a;
+    uint8_t                     b;
+    uint8_t                     c;
+    uint8_t                     d;
 };
+struct IPv4Address ipv4(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
+    return (struct IPv4Address){ .a = a, .b = b, .c = c, .d = d };
+}
 
 #define IPV4_OPTION_CLASS_CONTROL 0
 // #define _IPV4_OPTION_CLASS_RESERVED 1
@@ -46,7 +52,7 @@ struct __attribute__((packed)) IPv4Header {
     struct IPv4TypeOfService    typeOfService;
     int16_t                     totalLength;
 
-    int16_t                     identification;
+    uint16_t                    identification;
 
     unsigned int                fragmentOffsetHi : 5;
 
