@@ -91,16 +91,18 @@ uint16_t getFragmentOffset(struct IPv4Header *header) {
 
 void assignChecksum(struct IPv4Header *header) {
     header->checksum = 0;
-    int16_t *sbp = (int16_t *)header;
-    int16_t sum = 0;
+    uint16_t *sbp = (uint16_t *)header;
+    uint16_t sum = 0;
     int len = header->length * 2; // length is measured in 32 bits, checksum in 16 bits
 
     for(int i = 0; i < len; i++) {
-        int32_t psum = sum + *sbp;
-        sum = (psum & 0xFFFF) + (psum >> 16);
+        uint32_t psum = sum + (hn16(*sbp) & 0xFFFF);
+        printf("PSUM: %x\n", psum);
+
+        sum = (psum + ((psum >> 16) & 1)) & 0xFFFF;
         sbp++;
     }
-    header->checksum = hn16(sum);
+    header->checksum = hn16(~sum);
 }
 
 bool hasOptions(struct IPv4Header *header) {
