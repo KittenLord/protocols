@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 
 #define to(ty, val) (*(ty *)&val)
 
@@ -179,6 +180,10 @@ struct IPv4Header *createPacket() {
     header->version = 4;
     header->length = MIN_IPV4_HEADER_LENGTH;
     header->totalLength = hn16(MIN_IPV4_HEADER_LENGTH*4);
+
+    srand(time(NULL));
+    header->identification = rand() % 0xFFFF; 
+
     return header;
 }
 
