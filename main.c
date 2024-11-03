@@ -39,8 +39,13 @@ int main(int argc, char **argv) {
             .length = hn16(ETH_P_IP)
         };
 
+        /* my saviour */
+        /* https://stackoverflow.com/questions/12811487/raw-socket-error-with-sendto-no-error-code-was-raw-socket-error-with-sendto */
         struct ifreq ifr = { .ifr_name = "wlan0" };
+
+        // TODO: figure out what this line does
         int result = ioctl(sock, SIOCGIFINDEX, &ifr);
+
         printf("Result: %d\n", result);
         printf("Errno: %d\n", errno);
 
@@ -51,6 +56,7 @@ int main(int argc, char **argv) {
         *eh = ehv;
         memcpy(eh + 1, header, hn16(header->totalLength));
 
+        // TODO: and also this line
         result = sendto(sock, eh, packetSize, 0, (struct sockaddr *)&sa, sizeof(sa));
         printf("Result: %d\n", result);
         printf("Errno: %d\n", errno);
