@@ -1,3 +1,6 @@
+#ifndef KITTENLORD_IPV4_
+#define KITTENLORD_IPV4_
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -5,9 +8,6 @@
 #include <stdint.h>
 
 #define to(ty, val) (*(ty *)&val)
-
-#ifndef KITTENLORD_IPV4_
-#define KITTENLORD_IPV4_
 
 struct __attribute__((packed)) IPv4TypeOfService {
     unsigned int                precedence : 3;
@@ -97,8 +97,6 @@ void assignChecksum(struct IPv4Header *header) {
 
     for(int i = 0; i < len; i++) {
         uint32_t psum = sum + (hn16(*sbp) & 0xFFFF);
-        printf("PSUM: %x\n", psum);
-
         sum = (psum + ((psum >> 16) & 1)) & 0xFFFF;
         sbp++;
     }
