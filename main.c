@@ -23,7 +23,7 @@ int createSocket() {
     return sock;
 }
 
-struct IPv4Header *waitForIPv4Packet(int sock, bool (*predicate)(struct IPv4Header *)) {
+struct IPv4Header *waitForIPv4Packet(int sock, bool (*predicate)(struct IPv4Header *, void *), void *arg) {
     uint8_t data[65535];
     struct IPv4Header *header;
 
@@ -33,7 +33,7 @@ struct IPv4Header *waitForIPv4Packet(int sock, bool (*predicate)(struct IPv4Head
 
         int result = recvfrom(sock, data, sizeof(data), 0, (struct sockaddr *)&src, &srclen);
         header = (struct IPv4Header *)data;
-        if(header->version == 4 && predicate(header)) break;
+        if(header->version == 4 && predicate(header, arg)) break;
         memset(data, 0, 65535);
     }
 
@@ -43,12 +43,12 @@ struct IPv4Header *waitForIPv4Packet(int sock, bool (*predicate)(struct IPv4Head
     return header;
 }
 
-bool __constant(struct IPv4Header *header) { return true; }
+bool __constant(struct IPv4Header *header, void *_) { return true; }
 struct IPv4Header *waitForAnyIPv4Packet(int sock) {
-    return waitForIPv4Packet(sock, __constant);
+    return waitForIPv4Packet(sock, __constant, 0);
 }
 
-bool checkForIdentification69(struct IPv4Header *header) {
+bool checkForIdentification69(struct IPv4Header *header, void *_) {
     return hn16(header->identification) == 69;
 }
 
@@ -60,7 +60,7 @@ void mainServer() {
 
     struct IPv4Header *header;
 
-    header = waitForIPv4Packet(sock, checkForIdentification69);
+    header = waitForIPv4Packet(sock, checkForIdentification69, 0);
         
     // header = waitForAnyIPv4Packet(sock);
 
