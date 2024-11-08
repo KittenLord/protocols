@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include "ethernet.c"
 
 #define to(ty, val) (*(ty *)&val)
 
@@ -166,13 +167,19 @@ struct IPv4Header *addOption(struct IPv4Header *header, struct IPv4OptionType op
     return header;
 }
 
-struct IPv4Header *setData(struct IPv4Header *header, int16_t size, int8_t *data) {
+struct IPv4Header *setData(struct IPv4Header *header, int8_t *data, int16_t size) {
     int16_t newTotalLength = header->length*4 + size;
     header = realloc(header, newTotalLength);
     header->totalLength = hn16(newTotalLength);
     int8_t *dest = (int8_t *)header + header->length*4;
     memcpy(dest, data, size);
     return header;
+}
+
+uint8_t *getData(struct IPv4Header *header, size_t *length) {
+    int headerLength = header->length * 4;
+    if(length) *length = hn16(header->totalLength) - headerLength;
+    return (uint8_t *)header + headerLength;
 }
 
 struct IPv4Header *createPacket() {
