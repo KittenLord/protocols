@@ -112,7 +112,7 @@ void TCP_assignChecksum(struct IPv4Header *header) {
     };
 
     uint16_t checksum = calculateChecksum((uint16_t *)&ph, sizeof(struct TcpPseudoHeader), 0);
-    checksum = calculateChecksum((uint16_t *)tcpheader, tcpheader->dataOffset*2, checksum);
+    checksum = calculateChecksum((uint16_t *)tcpheader, tcpheader->dataOffset*2, ~hn16(checksum));
     tcpheader->checksum = checksum;
 }
 

@@ -19,7 +19,8 @@ int main() {
     char *data = "ABOBA";
 
     struct IPv4Header *header = TCP_createPacket();
-    // header = TCP_setData(header, data, strlen(data));
+    header = TCP_setData(header, data, strlen(data));
+    TCP_assignChecksum(header);
 
     printf(TCP_getData(header, NULL));
 
