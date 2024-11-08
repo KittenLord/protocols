@@ -82,6 +82,14 @@ int16_t hn16(int16_t n) {
     return ((n >> 8) & 0x00FF) | ((n << 8) & 0xFF00);
 }
 
+int32_t hn32(int32_t n) {
+    if(!isLittleEndian()) return n;
+    return ((n >> 8*3) & 0x000000FF) | 
+           ((n >> 8*2) & 0x0000FF00) |
+           ((n << 8*2) & 0x00FF0000) |
+           ((n << 8*3) & 0xFF000000) ;
+}
+
 void setFragmentOffset(struct IPv4Header *header, uint16_t offset) {
     header->fragmentOffsetLo = offset & 0xFF;
     header->fragmentOffsetHi = (offset >> 8) & 0b11111;
@@ -91,18 +99,20 @@ uint16_t getFragmentOffset(struct IPv4Header *header) {
     return (header->fragmentOffsetHi << 8) | header->fragmentOffsetLo;
 }
 
+uint16_t calculateChecksum(uint16_t *ptr, size_t length, uint16_t init) {
+    uint16_t sum = init;
+    while(length--) {
+        uint32_t psum = sum + hn16(*ptr);
+        sum = (psum + ((psum >> 16) & 1)) & 0xFFFF;
+        ptr++;
+    }
+    return hn16(~sum);
+}
+
 void assignChecksum(struct IPv4Header *header) {
     header->checksum = 0;
-    uint16_t *sbp = (uint16_t *)header;
-    uint16_t sum = 0;
-    int len = header->length * 2; // length is measured in 32 bits, checksum in 16 bits
-
-    for(int i = 0; i < len; i++) {
-        uint32_t psum = sum + (hn16(*sbp) & 0xFFFF);
-        sum = (psum + ((psum >> 16) & 1)) & 0xFFFF;
-        sbp++;
-    }
-    header->checksum = hn16(~sum);
+    uint16_t checksum = calculateChecksum((uint16_t *)header, header->length * 2, 0);
+    header->checksum = checksum;
 }
 
 bool hasOptions(struct IPv4Header *header) {
@@ -172,7 +182,7 @@ struct IPv4Header *setData(struct IPv4Header *header, int8_t *data, int16_t size
     header = realloc(header, newTotalLength);
     header->totalLength = hn16(newTotalLength);
     int8_t *dest = (int8_t *)header + header->length*4;
-    memcpy(dest, data, size);
+    memmove(dest, data, size);
     return header;
 }
 
@@ -190,6 +200,7 @@ struct IPv4Header *createPacket() {
 
     srand(time(NULL));
     header->identification = rand() % 0xFFFF; 
+    header->timeToLive = 100;
 
     return header;
 }
