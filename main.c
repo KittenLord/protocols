@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -27,4 +28,8 @@ int main() {
     prdump(header, hn16(header->totalLength), PRD_HEX, PRD_ONLY_OFFSET, 1, 4, 2);
     prdump(header, hn16(header->totalLength), PRD_BINARY, PRD_ONLY_OFFSET, 1, 4, 2);
 
+    struct TcpClient client;
+    bool result = createTcpClient(&client, 0);
+    printf("%d\n", result);
+    printf("%d\n", errno);
 }

@@ -71,7 +71,8 @@ struct TcpConnection {
 
 struct TcpClient {
     int                 socket;
-}
+    int                 dummy;
+};
 
 struct TcpHeader *TCP_getHeader(struct IPv4Header *header) {
     return (struct TcpHeader *)getData(header, NULL);
@@ -121,22 +122,28 @@ void TCP_assignChecksum(struct IPv4Header *header) {
     tcpheader->checksum = checksum;
 }
 
-bool createTcpClient(struct TcpClient *client, uint16_t port) {
+uint16_t createTcpClient(struct TcpClient *client, uint16_t port) {
     int sock = socket(AF_PACKET, SOCK_DGRAM, hn16(ETH_P_ALL));
+    int dummy = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0) goto error;
 
-    // FIXME: how tf does bind work
-    if(!bind(sock, 0, 0)) goto error;
+    struct sockaddr_in addr = {0};
+    addr.sin_port = hn16(port);
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = hn16(INADDR_ANY);
+
+    if(bind(dummy, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0) goto error;
 
     *client = (struct TcpClient){
-        socket = sock
+        .socket = sock,
+        .dummy = dummy
     };
 
-    return true;
+    return port; // TODO: get actual port
 
 error:
     close(sock);
-    return false;
+    return 0;
 }
 
 void TCP_connect(struct TcpClient *client) {
