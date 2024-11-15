@@ -2,6 +2,7 @@
 #define KITTENLORD_TCP__
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "ipv4.c"
 
 struct __attribute__((packed)) TcpHeader {
@@ -68,6 +69,10 @@ struct TcpConnection {
     uint32_t            recvInitialSeqNumber;
 };
 
+struct TcpClient {
+    int                 socket;
+}
+
 struct TcpHeader *TCP_getHeader(struct IPv4Header *header) {
     return (struct TcpHeader *)getData(header, NULL);
 }
@@ -114,6 +119,28 @@ void TCP_assignChecksum(struct IPv4Header *header) {
     uint16_t checksum = calculateChecksum((uint16_t *)&ph, sizeof(struct TcpPseudoHeader), 0);
     checksum = calculateChecksum((uint16_t *)tcpheader, tcpheader->dataOffset*2, ~hn16(checksum));
     tcpheader->checksum = checksum;
+}
+
+bool createTcpClient(struct TcpClient *client, uint16_t port) {
+    int sock = socket(AF_PACKET, SOCK_DGRAM, hn16(ETH_P_ALL));
+    if(sock < 0) goto error;
+
+    // FIXME: how tf does bind work
+    if(!bind(sock, 0, 0)) goto error;
+
+    *client = (struct TcpClient){
+        socket = sock
+    };
+
+    return true;
+
+error:
+    close(sock);
+    return false;
+}
+
+void TCP_connect(struct TcpClient *client) {
+
 }
 
 #else
