@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "ipv4.c"
+#include "../atomic-hashmap/atomichashmap.c"
 
 struct __attribute__((packed)) TcpHeader {
 
@@ -70,8 +71,15 @@ struct TcpConnection {
 };
 
 struct TcpClient {
-    int                 socket;
-    int                 dummy;
+    int                     socket;
+    int                     dummy;
+    uint16_t                port;
+    struct AtomicHashmap    connections;
+};
+
+struct TcpAddress {
+    struct IPv4Address      ipv4;
+    uint16_t                port;
 };
 
 struct TcpHeader *TCP_getHeader(struct IPv4Header *header) {
@@ -128,26 +136,36 @@ uint16_t createTcpClient(struct TcpClient *client, uint16_t port) {
     if(sock < 0) goto error;
 
     struct sockaddr_in addr = {0};
+    socklen_t len = sizeof(struct sockaddr_in *);
     addr.sin_port = hn16(port);
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = hn16(INADDR_ANY);
 
     if(bind(dummy, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0) goto error;
+    if(getsockname(dummy, (struct sockaddr *)&addr, &len) == -1) goto error;
+    port = hn16(addr.sin_port);
 
     *client = (struct TcpClient){
         .socket = sock,
-        .dummy = dummy
+        .dummy = dummy,
+        .port = port,
+        .connections = createHM_SS(struct TcpAddress, struct TcpConnection)
     };
 
-    return port; // TODO: get actual port
+    return port;
 
 error:
     close(sock);
+    close(dummy);
     return 0;
 }
 
-void TCP_connect(struct TcpClient *client) {
+void TCP_connect(struct TcpClient *client, struct TcpAddress address) {
+    acquireLock(&client->connections);
 
+    struct IPv4Header *header = TCP_createPacket();
+
+    releaseLock(&client->connections);
 }
 
 #else

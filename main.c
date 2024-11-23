@@ -29,7 +29,7 @@ int main() {
     prdump(header, hn16(header->totalLength), PRD_BINARY, PRD_ONLY_OFFSET, 1, 4, 2);
 
     struct TcpClient client;
-    bool result = createTcpClient(&client, 0);
+    uint16_t result = createTcpClient(&client, 0);
     printf("%d\n", result);
     printf("%d\n", errno);
 }
